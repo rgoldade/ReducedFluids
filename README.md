@@ -6,7 +6,7 @@ Source code from the SIGGRAPH 2020 technical paper [Constraint Bubbles and Affin
 
 To build this project in Houdini (Linux):
 
-1. Install [Eigen3](http://eigen.tuxfamily.org/)
+1. Install [Eigen](http://eigen.tuxfamily.org/)
 
 2. Clone the [Geometric Multigrd Pressure Solver](https://github.com/rgoldade/GeometricMultigridPressureSolver) into the External folder
 

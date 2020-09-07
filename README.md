@@ -28,3 +28,5 @@ To build this project in Houdini (Linux):
   - Launch Houdini.
   - Press "tab" in the Network Editor and select a "DOP Network" and place it in the editor.
   - Jump into the DOP Network, press "tab" again and verify that "HDK Affine Bubble Pressure Solver" is searchable.
+
+To build this project in another OS, please refer to the [Houdini HDK](https://www.sidefx.com/docs/hdk/_h_d_k__intro__compiling.html).

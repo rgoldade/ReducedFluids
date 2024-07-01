@@ -12,7 +12,7 @@ To build this project in Houdini (Linux):
 
 3. Clone the [Geometric Multigrd Pressure Solver](https://github.com/rgoldade/GeometricMultigridPressureSolver) into the External folder
 
-4. Install Houdini 18.0 or higher.
+4. Install Houdini 20.0 or higher.
 
 5. Go to install folder (/opt/hfs.xx).
 

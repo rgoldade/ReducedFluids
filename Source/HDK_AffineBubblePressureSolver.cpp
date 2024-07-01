@@ -2,7 +2,8 @@
 
 #include <Eigen/LU>
 
-#include "tbb/tbb.h"
+#include "tbb/enumerable_thread_specific.h"
+#include "tbb/parallel_for.h"
 
 #include <GA/GA_PageHandle.h>
 #include <GA/GA_Iterator.h>
@@ -453,13 +454,13 @@ HDK_AffineBubblePressureSolver::solveGasSubclass(SIM_Engine &engine,
 
 	interiorRegionIndices.match(liquidSurface);
 
-	SIM_VolumetricConnectedComponentBuilder interiorRegionBuilder(interiorRegionIndices, materialCellLabels, cutCellWeights.data());
+	SIM_VolumetricConnectedComponentBuilder<> interiorRegionBuilder(interiorRegionIndices, materialCellLabels, cutCellWeights.data());
 
 	interiorRegionCount = interiorRegionBuilder.buildConnectedComponents([](const exint label) { return label == MaterialLabels::INTERIOR_BUBBLE_CELL ||
 													    label == MaterialLabels::INTERIOR_LIQUID_CELL; });
 
 	HDK::Utilities::overwriteIndices(interiorRegionIndices,
-					    SIM_VolumetricConnectedComponentBuilder::INACTIVE_REGION,
+					    SIM_VolumetricConnectedComponentBuilder<>::INACTIVE_REGION,
 					    HDK::Utilities::UNLABELLED_CELL);
 
 	std::cout << "    Interior region count: " << interiorRegionCount << std::endl;
@@ -733,12 +734,12 @@ HDK_AffineBubblePressureSolver::solveGasSubclass(SIM_Engine &engine,
 
 		activeRegionIndices.match(liquidSurface);
 
-		SIM_VolumetricConnectedComponentBuilder activeRegionBuilder(activeRegionIndices, materialCellLabels, cutCellWeights.data());
+		SIM_VolumetricConnectedComponentBuilder<> activeRegionBuilder(activeRegionIndices, materialCellLabels, cutCellWeights.data());
 		activeRegionCount = activeRegionBuilder.buildConnectedComponents([](const exint label) { return label == MaterialLabels::EXTERIOR_BUBBLE_CELL ||
 														label == MaterialLabels::EXTERIOR_LIQUID_CELL; });
 	    
 		HDK::Utilities::overwriteIndices(activeRegionIndices,
-						    SIM_VolumetricConnectedComponentBuilder::INACTIVE_REGION,
+						    SIM_VolumetricConnectedComponentBuilder<>::INACTIVE_REGION,
 						    HDK::Utilities::UNLABELLED_CELL);
 
 		std::cout << "\n    Active region count: " << activeRegionCount << std::endl;
@@ -2758,7 +2759,7 @@ HDK_AffineBubblePressureSolver::buildBubbleRegions(SIM_RawIndexField &fullBubble
 						    std::array<const SIM_RawField *, 3> &cutCellWeights)
 {
     // First build combined region of bubble cells
-    SIM_VolumetricConnectedComponentBuilder fullBubbleRegionBuilder(fullBubbleRegionIndices, materialCellLabels, cutCellWeights.data());
+    SIM_VolumetricConnectedComponentBuilder<> fullBubbleRegionBuilder(fullBubbleRegionIndices, materialCellLabels, cutCellWeights.data());
 
     exint fullBubbleRegionCount = fullBubbleRegionBuilder.buildConnectedComponents([](const exint label)
     { 

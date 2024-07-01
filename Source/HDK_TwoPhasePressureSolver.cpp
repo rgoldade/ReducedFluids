@@ -2,8 +2,6 @@
 
 #include <Eigen/LU>
 
-#include "tbb/tbb.h"
-
 #include <GA/GA_PageHandle.h>
 #include <GA/GA_Iterator.h>
 #include <GA/GA_SplittableRange.h>
@@ -882,7 +880,7 @@ HDK_TwoPhasePressureSolver::buildBubbleRegionIndices(SIM_RawIndexField &bubbleRe
 {
     std::cout << "  Build connected bubble regions" << std::endl;
 
-    SIM_VolumetricConnectedComponentBuilder interiorRegionBuilder(bubbleRegionIndices, materialCellLabels, cutCellWeights.data());
+    SIM_VolumetricConnectedComponentBuilder<> interiorRegionBuilder(bubbleRegionIndices, materialCellLabels, cutCellWeights.data());
     
     exint bubbleRegionCount = interiorRegionBuilder.buildConnectedComponents([](const exint label)
     {
@@ -890,7 +888,7 @@ HDK_TwoPhasePressureSolver::buildBubbleRegionIndices(SIM_RawIndexField &bubbleRe
     });
 
     HDK::Utilities::overwriteIndices(bubbleRegionIndices,
-					SIM_VolumetricConnectedComponentBuilder::INACTIVE_REGION,
+					SIM_VolumetricConnectedComponentBuilder<>::INACTIVE_REGION,
 					HDK::Utilities::UNLABELLED_CELL);
 
     std::cout << "  Compute bubble sizes for " << bubbleRegionCount << "-many bubbles." << std::endl;
@@ -928,7 +926,7 @@ HDK_TwoPhasePressureSolver::buildActiveRegionIndices(SIM_RawIndexField &activeRe
 {
     activeRegionIndices.match(materialCellLabels);
 
-    SIM_VolumetricConnectedComponentBuilder activeRegionRegionBuilder(activeRegionIndices, materialCellLabels, cutCellWeights.data());
+    SIM_VolumetricConnectedComponentBuilder<> activeRegionRegionBuilder(activeRegionIndices, materialCellLabels, cutCellWeights.data());
 
     exint activeRegionCount = activeRegionRegionBuilder.buildConnectedComponents([](const exint label)
     {
@@ -936,7 +934,7 @@ HDK_TwoPhasePressureSolver::buildActiveRegionIndices(SIM_RawIndexField &activeRe
     });
 
     HDK::Utilities::overwriteIndices(activeRegionIndices,
-					SIM_VolumetricConnectedComponentBuilder::INACTIVE_REGION,
+					SIM_VolumetricConnectedComponentBuilder<>::INACTIVE_REGION,
 					HDK::Utilities::UNLABELLED_CELL);
 
     return activeRegionCount;
@@ -2458,9 +2456,6 @@ HDK_TwoPhasePressureSolver::computeResultingDivergence(std::array<SolveReal, 3> 
     UT_Array<SolveReal> parallelCellCount;
     parallelCellCount.setSize(threadCount);
     parallelCellCount.constant(0);
-
-    const SolveReal dx = velocity.getVoxelSize().maxComponent();
-    const SolveReal sqr_dx = dx * dx;
 
     UT_Interrupt *boss = UTgetInterrupt();
 

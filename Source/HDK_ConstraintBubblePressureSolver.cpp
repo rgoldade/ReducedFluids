@@ -1,6 +1,7 @@
 #include "HDK_ConstraintBubblePressureSolver.h"
 
-#include "tbb/tbb.h"
+#include "tbb/enumerable_thread_specific.h"
+#include "tbb/parallel_for.h"
 
 #include <GA/GA_PageHandle.h>
 #include <GA/GA_Iterator.h>
@@ -2229,7 +2230,7 @@ HDK_ConstraintBubblePressureSolver::buildBubbleRegionIndices(SIM_RawIndexField &
 {
     std::cout << "  Build connected bubble regions" << std::endl;
 
-    SIM_VolumetricConnectedComponentBuilder interiorRegionBuilder(bubbleRegionIndices, materialCellLabels, cutCellWeights.data());
+    SIM_VolumetricConnectedComponentBuilder<> interiorRegionBuilder(bubbleRegionIndices, materialCellLabels, cutCellWeights.data());
     
     exint bubbleRegionCount = interiorRegionBuilder.buildConnectedComponents([](const exint label)
     {
@@ -2237,7 +2238,7 @@ HDK_ConstraintBubblePressureSolver::buildBubbleRegionIndices(SIM_RawIndexField &
     });
 
     HDK::Utilities::overwriteIndices(bubbleRegionIndices,
-					SIM_VolumetricConnectedComponentBuilder::INACTIVE_REGION,
+					SIM_VolumetricConnectedComponentBuilder<>::INACTIVE_REGION,
 					HDK::Utilities::UNLABELLED_CELL);
 
     std::cout << "  Compute bubble sizes for " << bubbleRegionCount << "-many bubbles." << std::endl;
@@ -2275,7 +2276,7 @@ HDK_ConstraintBubblePressureSolver::buildCombinedRegionIndices(SIM_RawIndexField
 {
     combinedRegionIndices.match(materialCellLabels);
 
-    SIM_VolumetricConnectedComponentBuilder combinedRegionRegionBuilder(combinedRegionIndices, materialCellLabels, cutCellWeights.data());
+    SIM_VolumetricConnectedComponentBuilder<> combinedRegionRegionBuilder(combinedRegionIndices, materialCellLabels, cutCellWeights.data());
 
     exint combinedRegionCount = combinedRegionRegionBuilder.buildConnectedComponents([](const exint label)
     {
@@ -2283,7 +2284,7 @@ HDK_ConstraintBubblePressureSolver::buildCombinedRegionIndices(SIM_RawIndexField
     });
 
     HDK::Utilities::overwriteIndices(combinedRegionIndices,
-					SIM_VolumetricConnectedComponentBuilder::INACTIVE_REGION,
+					SIM_VolumetricConnectedComponentBuilder<>::INACTIVE_REGION,
 					HDK::Utilities::UNLABELLED_CELL);
 
     return combinedRegionCount;
@@ -3146,6 +3147,7 @@ HDK_ConstraintBubblePressureSolver::buildLiquidRows(std::vector<std::vector<Eige
 			SolveReal diagonal = 0.;
 
 			for (int axis : {0,1,2})
+			{
 			    for (int direction : {0,1})
 			    {
 				UT_Vector3I adjacentCell = cellToCellMap(cell, axis, direction);
@@ -3190,6 +3192,7 @@ HDK_ConstraintBubblePressureSolver::buildLiquidRows(std::vector<std::vector<Eige
 				    }
 				}
 			    }
+			}
 
 			    assert(diagonal > 0.);
 			    localSparseElements.push_back(Eigen::Triplet<SolveReal>(liquidIndex, liquidIndex, diagonal));

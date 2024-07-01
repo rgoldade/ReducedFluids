@@ -2,7 +2,8 @@
 
 #include <Eigen/LU>
 
-#include "tbb/tbb.h"
+#include "tbb/enumerable_thread_specific.h"
+#include "tbb/parallel_for.h"
 
 #include <GU/GU_Detail.h>
 
@@ -492,11 +493,11 @@ bool HDK_AffineFreeSurfacePressureSolver::solveGasSubclass(SIM_Engine &engine,
 
 	interiorRegionIndices.match(liquidSurface);
 
-	SIM_VolumetricConnectedComponentBuilder interiorRegionBuilder(interiorRegionIndices, materialCellLabels, cutCellWeights.data());
+	SIM_VolumetricConnectedComponentBuilder<> interiorRegionBuilder(interiorRegionIndices, materialCellLabels, cutCellWeights.data());
 	interiorRegionCount = interiorRegionBuilder.buildConnectedComponents([](const exint label) { return label == MaterialLabels::INTERIOR_LIQUID_CELL; });
 
 	HDK::Utilities::overwriteIndices(interiorRegionIndices,
-					    SIM_VolumetricConnectedComponentBuilder::INACTIVE_REGION,
+					    SIM_VolumetricConnectedComponentBuilder<>::INACTIVE_REGION,
 					    HDK::Utilities::UNLABELLED_CELL);
     }
 
